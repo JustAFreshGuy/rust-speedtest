@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>Rust Speedtest</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0b1020;
+      color: #f5f7ff;
+      font-synthesis: none;
+    }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background: radial-gradient(ellipse at 50% -10%, #202c55 0, #0b1020 58%);
+    }
+    main { width: min(960px, calc(100% - 32px)); margin: 0 auto; padding: 64px 0 40px; }
+    header { text-align: center; margin-bottom: 34px; }
+    .eyebrow { color: #86a4ff; font-size: .78rem; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { margin: 10px 0 8px; font-size: clamp(2rem, 5vw, 3.2rem); letter-spacing: -.045em; }
+    .subtitle { margin: 0; color: #aab4d0; font-size: 1rem; }
+    .panel { border: 1px solid #273252; border-radius: 24px; background: #11182be8; box-shadow: 0 24px 80px #0005; padding: clamp(22px, 5vw, 44px); }
+    .topline { display: flex; justify-content: space-between; gap: 12px; align-items: center; color: #9eabc9; font-size: .85rem; }
+    .server { color: #c4cee7; }
+    .status { display: flex; gap: 9px; align-items: center; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #69738e; }
+    .dot.live { background: #66e3ae; box-shadow: 0 0 14px #66e3ae99; }
+    .dial-wrap { display: grid; place-items: center; padding: 34px 0 30px; }
+    .dial { width: 202px; height: 202px; border-radius: 50%; border: 1px solid #36436a; display: grid; place-items: center; background: radial-gradient(circle at 50% 45%, #192443, #0d1426 70%); box-shadow: inset 0 0 32px #6e8cff18, 0 0 60px #577aff12; }
+    button { font: inherit; }
+    #start { width: 148px; height: 148px; border: 2px solid #7290ff; border-radius: 50%; color: white; background: linear-gradient(145deg, #587aff, #3757d4); font-weight: 800; font-size: 1.08rem; letter-spacing: .08em; cursor: pointer; box-shadow: 0 8px 34px #4567ff55; transition: transform .16s, filter .16s; }
+    #start:hover:not(:disabled) { transform: scale(1.045); filter: brightness(1.12); }
+    #start:focus-visible { outline: 3px solid #b9c8ff; outline-offset: 5px; }
+    #start:disabled { cursor: wait; opacity: .82; }
+    #readout { min-height: 1.5em; color: #c2cce4; text-align: center; font-size: .95rem; }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .metric { min-height: 116px; padding: 20px 16px; border: 1px solid #263252; border-radius: 16px; background: #0c1325; text-align: center; }
+    .metric-label { color: #9ca9c8; font-size: .82rem; }
+    .metric-value { margin-top: 10px; font-size: clamp(1.35rem, 3vw, 2rem); font-weight: 750; letter-spacing: -.04em; }
+    .unit { color: #a9b5d2; font-size: .85rem; font-weight: 500; letter-spacing: 0; }
+    .note { margin: 24px 0 0; color: #8793b2; font-size: .78rem; line-height: 1.6; text-align: center; }
+    footer { margin-top: 18px; color: #65718f; font-size: .75rem; text-align: center; }
+    footer a { color: #9aafff; }
+    @media (max-width: 620px) {
+      main { padding-top: 38px; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .topline { align-items: flex-start; flex-direction: column; }
+      .dial { width: 180px; height: 180px; }
+      #start { width: 132px; height: 132px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">Connection check</div>
+      <h1>Rust Speedtest</h1>
+      <p class="subtitle">Check your ping, jitter, download, and upload speed.</p>
+    </header>
+
+    <section class="panel" aria-label="Internet speed test">
+      <div class="topline">
+        <div class="status"><span id="dot" class="dot" aria-hidden="true"></span><span id="status">Ready when you are</span></div>
+        <div class="server">Test server: Nuremberg, Germany</div>
+      </div>
+      <div class="dial-wrap">
+        <div class="dial"><button id="start" type="button">START</button></div>
+      </div>
+      <div id="readout" role="status" aria-live="polite">Press Start to begin the test.</div>
+      <div class="metrics" aria-label="Results">
+        <div class="metric"><div class="metric-label">Ping</div><div class="metric-value"><span id="ping">—</span> <span class="unit">ms</span></div></div>
+        <div class="metric"><div class="metric-label">Jitter</div><div class="metric-value"><span id="jitter">—</span> <span class="unit">ms</span></div></div>
+        <div class="metric"><div class="metric-label">Download</div><div class="metric-value"><span id="download">—</span> <span class="unit">Mbps</span></div></div>
+        <div class="metric"><div class="metric-label">Upload</div><div class="metric-value"><span id="upload">—</span> <span class="unit">Mbps</span></div></div>
+      </div>
+      <p class="note">This demo sends test traffic to a shared public LibreSpeed server. Results depend on your distance from that server. Please avoid repeated tests.</p>
+    </section>
+    <footer>Built with Rust · Test data endpoints provided by <a href="https://librespeed.org" rel="noreferrer">LibreSpeed</a></footer>
+  </main>
+
+  <script>
+    (() => {
+      const base = "https://de3.backend.librespeed.org";
+      const pingUrl = `${base}/empty.php?cors=1`;
+      const downloadUrl = `${base}/garbage.php?cors=1&ckSize=4`;
+      const uploadUrl = `${base}/empty.php?cors=1`;
+      const durationMs = 5000;
+      const streams = 2;
+      const $ = (id) => document.getElementById(id);
+      const startButton = $("start");
+      const setStatus = (message, active = false) => {
+        $("status").textContent = message;
+        $("dot").classList.toggle("live", active);
+      };
+      const show = (id, value) => { $(id).textContent = Number.isFinite(value) ? value.toFixed(1) : "—"; };
+      const uniqueUrl = (url) => `${url}&t=${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+      async function measurePing() {
+        const samples = [];
+        for (let i = 0; i < 8; i++) {
+          const started = performance.now();
+          const response = await fetch(uniqueUrl(pingUrl), { cache: "no-store", mode: "cors" });
+          if (!response.ok) throw new Error("Ping request failed");
+          await response.arrayBuffer();
+          samples.push(performance.now() - started);
+        }
+        const average = samples.reduce((sum, sample) => sum + sample, 0) / samples.length;
+        const jitter = samples.slice(1).reduce((sum, sample, i) => sum + Math.abs(sample - samples[i]), 0) / (samples.length - 1);
+        return { average, jitter };
+      }
+
+      async function measureDownload() {
+        const started = performance.now();
+        const deadline = started + durationMs;
+        let bytes = 0;
+        const controllers = new Set();
+        const stop = setTimeout(() => controllers.forEach((controller) => controller.abort()), durationMs);
+        const worker = async () => {
+          while (performance.now() < deadline) {
+            const controller = new AbortController();
+            controllers.add(controller);
+            try {
+              const response = await fetch(uniqueUrl(downloadUrl), { cache: "no-store", mode: "cors", signal: controller.signal });
+              if (!response.ok || !response.body) throw new Error("Download request failed");
+              const reader = response.body.getReader();
+              while (performance.now() < deadline) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                bytes += value.byteLength;
+              }
+              await reader.cancel().catch(() => {});
+            } catch (error) {
+              if (error.name !== "AbortError") throw error;
+            } finally {
+              controllers.delete(controller);
+            }
+          }
+        };
+        try { await Promise.all(Array.from({ length: streams }, worker)); }
+        finally { clearTimeout(stop); controllers.forEach((controller) => controller.abort()); }
+        const elapsed = (performance.now() - started) / 1000;
+        return (bytes * 8) / elapsed / 1_000_000;
+      }
+
+      function randomPayload(size) {
+        const payload = new Uint8Array(size);
+        for (let offset = 0; offset < size; offset += 65536) {
+          crypto.getRandomValues(payload.subarray(offset, Math.min(offset + 65536, size)));
+        }
+        return payload;
+      }
+
+      async function measureUpload() {
+        const payload = randomPayload(512 * 1024);
+        const started = performance.now();
+        const deadline = started + durationMs;
+        let bytes = 0;
+        const controllers = new Set();
+        const stop = setTimeout(() => controllers.forEach((controller) => controller.abort()), durationMs);
+        const worker = async () => {
+          while (performance.now() < deadline) {
+            const controller = new AbortController();
+            controllers.add(controller);
+            try {
+              const response = await fetch(uniqueUrl(uploadUrl), {
+                method: "POST", body: payload, cache: "no-store", mode: "cors", signal: controller.signal,
+              });
+              if (!response.ok) throw new Error("Upload request failed");
+              await response.arrayBuffer();
+              bytes += payload.byteLength;
+            } catch (error) {
+              if (error.name !== "AbortError") throw error;
+            } finally {
+              controllers.delete(controller);
+            }
+          }
+        };
+        try { await Promise.all(Array.from({ length: streams }, worker)); }
+        finally { clearTimeout(stop); controllers.forEach((controller) => controller.abort()); }
+        const elapsed = (performance.now() - started) / 1000;
+        return (bytes * 8) / elapsed / 1_000_000;
+      }
+
+      startButton.addEventListener("click", async () => {
+        startButton.disabled = true;
+        startButton.textContent = "RUNNING";
+        ["ping", "jitter", "download", "upload"].forEach((id) => show(id, NaN));
+        try {
+          setStatus("Measuring ping and jitter…", true);
+          $("readout").textContent = "Checking response time…";
+          const latency = await measurePing();
+          show("ping", latency.average);
+          show("jitter", latency.jitter);
+          setStatus("Measuring download…", true);
+          $("readout").textContent = "Receiving test data for 5 seconds…";
+          show("download", await measureDownload());
+          setStatus("Measuring upload…", true);
+          $("readout").textContent = "Sending test data for 5 seconds…";
+          show("upload", await measureUpload());
+          setStatus("Test complete");
+          $("readout").textContent = "Done. Run it again whenever you like.";
+        } catch (error) {
+          setStatus("Could not reach the test server");
+          $("readout").textContent = "The shared test server may be unavailable. Please try again later.";
+          console.error(error);
+        } finally {
+          startButton.disabled = false;
+          startButton.textContent = "START";
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
+
