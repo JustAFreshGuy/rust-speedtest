@@ -66,7 +66,7 @@
     <section class="panel" aria-label="Internet speed test">
       <div class="topline">
         <div class="status"><span id="dot" class="dot" aria-hidden="true"></span><span id="status">Ready when you are</span></div>
-        <div class="server">Test server: Nuremberg, Germany</div>
+        <div class="server">Test server: Prague, Czech Republic</div>
       </div>
       <div class="dial-wrap">
         <div class="dial"><button id="start" type="button">START</button></div>
@@ -78,14 +78,14 @@
         <div class="metric"><div class="metric-label">Download</div><div class="metric-value"><span id="download">—</span> <span class="unit">Mbps</span></div></div>
         <div class="metric"><div class="metric-label">Upload</div><div class="metric-value"><span id="upload">—</span> <span class="unit">Mbps</span></div></div>
       </div>
-      <p class="note">This demo sends test traffic to a shared public LibreSpeed server. Results depend on your distance from that server. Please avoid repeated tests.</p>
+      <p class="note">This demo sends test traffic to a shared public LibreSpeed server in Prague. Results depend on your distance from that server. Please avoid repeated tests.</p>
     </section>
     <footer>Built with Rust · Test data endpoints provided by <a href="https://librespeed.org" rel="noreferrer">LibreSpeed</a></footer>
   </main>
 
   <script>
     (() => {
-      const base = "https://de3.backend.librespeed.org";
+      const base = "https://librespeed.turris.cz/backend";
       const pingUrl = `${base}/empty.php?cors=1`;
       const downloadUrl = `${base}/garbage.php?cors=1&ckSize=4`;
       const uploadUrl = `${base}/empty.php?cors=1`;
