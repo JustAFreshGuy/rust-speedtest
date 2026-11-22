@@ -5,9 +5,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-const PING_URL: &str = "https://cloudflare.com";
-const DOWN_URL: &str = "https://cloudflare.com"; // 25 MB chunks
-const UP_URL: &str = "https://cloudflare.com";
+const PING_URL: &str = "https://de3.backend.librespeed.org/empty.php";
+const DOWN_URL: &str = "https://de3.backend.librespeed.org/garbage.php";
+const UP_URL: &str = "https://de3.backend.librespeed.org/empty.php";
 const CONCURRENCY: usize = 4;
 const TEST_DURATION: Duration = Duration::from_secs(8);
 
